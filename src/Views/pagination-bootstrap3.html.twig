@@ -1,0 +1,86 @@
+{% if totalCount == 0 %}
+    {% set current = 1 %}
+    {% set last = 1 %}
+    {% set pagesInRange = {0: 1} %}
+    {% set firstItemNumber = 0 %}
+    {% set lastItemNumber = 0 %}
+{% endif %}
+
+<div class="clearfix">
+    <ul class="pagination pull-left" style="margin-right: 15px;">
+        {# go to first #}
+        {% if current != first %}
+            <li>
+                <a href="{{ path(route, query|merge({(pageParameterName): first})) }}">&laquo;</a>
+            </li>
+        {% else %}
+            <li class="disabled">
+                <span>&laquo;</span>
+            </li>
+        {% endif %}
+
+        {# go previous #}
+        {% if previous is defined %}
+            <li>
+                <a href="{{ path(route, query|merge({(pageParameterName): previous})) }}">&lsaquo;</a>
+            </li>
+        {% else %}
+            <li class="disabled">
+                <span>&lsaquo;</span>
+            </li>
+        {% endif %}
+
+        {# go to page #}
+        {% for page in pagesInRange %}
+            {% if page != current %}
+                <li>
+                    <a href="{{ path(route, query|merge({(pageParameterName): page})) }}">{{ page }}</a>
+                </li>
+            {% else %}
+                <li class="active">
+                    <span>{{ page }}</span>
+                </li>
+            {% endif %}
+        {% endfor %}
+
+        {# go next #}
+        {% if next is defined %}
+            <li>
+                <a href="{{ path(route, query|merge({(pageParameterName): next})) }}">&rsaquo;</a>
+            </li>
+        {% else %}
+            <li class="disabled">
+                <span>&rsaquo;</span>
+            </li>
+        {% endif %}
+
+        {# go to last #}
+        {% if current != last %}
+            <li>
+                <a href="{{ path(route, query|merge({(pageParameterName): last})) }}">&raquo;</a>
+            </li>
+        {% else %}
+            <li class="disabled">
+                <span>&raquo;</span>
+            </li>
+        {% endif %}
+    </ul>
+
+    <div class="form-inline pull-left pagination">
+        <div class="input-group">
+            <span class="input-group-addon">{{ firstItemNumber }} - {{ lastItemNumber }} / {{ totalCount }}</span>
+            <div class="input-group-btn">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                    {{ numItemsPerPage }} <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-right">
+                    <li class="disabled"><a href="#" style="cursor: default;">{{ 'Items per page'|trans }}</a></li>
+                    <li class="divider"></li>
+                    {% for limit in app['knp_paginator.limits'] %}
+                        <li><a role="menuitem" href="{{ path(route, query|merge({limit: limit, (pageParameterName): 1})) }}">{{ limit }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
