@@ -15,8 +15,6 @@ $app->post('/form', function (Request $request) use ($app) {
     //
     $summ = $request->request->get('money'); //get number of sum from form
     $app['db']->insert('transaction', array('money_sum' => $summ));//insert into `transaction` table
-//    dump($app['db']->lastInsertId());
-//    dump($summ);
     $last_id = $app['db']->lastInsertId(); //get last inserted id from transaction
     $currency = array(
         [
@@ -90,34 +88,23 @@ $app->post('/form', function (Request $request) use ($app) {
                         'amount' => $key,
                         'type' => $type
                     ));
-                echo " quantity " . $item . " amount " . $key . " type " . $type . "<br>";
+//                echo " quantity " . $item . " amount " . $key . " type " . $type . "<br>";
             }
         }
-//        $json_result = json_encode($app['db']->fetchAll('SELECT * FROM `combinations` WHERE `transaction_id` = :id ', array('id' => $last_id)));
-        $json_result = $app['db']->fetchAll('SELECT * FROM `transaction` JOIN `combinations` WHERE `transaction`.id = `combinations`.transaction_id');
-        $pagination = $app['knp_paginator']->paginate($json_result);
+        $json_result = $app['db']->fetchAll('SELECT `quantity`,`amount`,`type` FROM `combinations` WHERE transaction_id = :transaction_id', array('transaction_id' => $last_id));
 
-        return $app['twig']->render('index.html.twig', array('pagination' => json_encode($pagination->getItems())));//return result to frontend
-
+        return new \Symfony\Component\HttpFoundation\JsonResponse (array('combinations' => $json_result));
     } // Logic for counting system
 
     else {
-        return $app['twig']->render('index.html.twig', array('pagination' => json_encode(array('error_message' => 'Out of range'))));
+        return new \Symfony\Component\HttpFoundation\JsonResponse(array('error_massage' => 'Out of Range!'));
     }
 })->bind('form');
 
-$app->error(function (\Exception $e, Request $request, $code) use ($app) {
-    if ($app['debug']) {
-        return;
-    }
+$app->get('/history', function (Silex\Application $app, Request $request) {
+    $json_result = $app['db']->fetchAll('SELECT * FROM `transaction` JOIN `combinations` WHERE `transaction`.id = `combinations`.transaction_id');
+    $pagination = $app['knp_paginator']->paginate($json_result, $request->query->get('page', '1'), $request->query->get('limit', '50'));
 
-    // 404.html, or 40x.html, or 4xx.html, or error.html
-    $templates = array(
-        'errors/' . $code . '.html.twig',
-        'errors/' . substr($code, 0, 2) . 'x.html.twig',
-        'errors/' . substr($code, 0, 1) . 'xx.html.twig',
-        'errors/default.html.twig',
-    );
-
-    return new Response($app['twig']->resolveTemplate($templates)->render(array('code' => $code)), $code);
+    return new \Symfony\Component\HttpFoundation\JsonResponse($pagination->getItems());//return result to frontend
+    #  return JsonResponse('history.html.twig', array('pagination' => json_encode()));
 });
